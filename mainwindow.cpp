@@ -1,7 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 static const QString TEMPERANCE {"TEMPERANCE. Eat not to dullness; drink not to elevation.\n"
-    "节制：食不过饱，饮不过量。"};
+    "节制：食不过饱，饮不过量。"
+};
 static const QString SILENCE{"SILENCE. Speak not but what may benefit others or yourself; avoid trifling conversation.\n"
     "缄默：只说对人对己有益的话，避免闲聊。"};
 static const QString ORDER{"ORDER. Let all your things have their places; let each part of your business have its time.\n"
@@ -48,29 +49,56 @@ MainWindow::MainWindow(QWidget *parent) :
     virtueList.push_back(TRANQUILLITY);
     virtueList.push_back(CHASTITY);
     virtueList.push_back(HUMILITY);
+    ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     changedTextForDate(QDate::currentDate());
-    connect(ui->calendarWidget,&QCalendarWidget::clicked,this,&MainWindow::changedTextForDate);
-    connect(ui->calendarWidget,&QCalendarWidget::selectionChanged,this,&MainWindow::changedText);
-    connect(ui->calendarWidget,&QCalendarWidget::currentPageChanged,this,&MainWindow::changedText);
-    connect(ui->calendarWidget,&QCalendarWidget::activated,this,&MainWindow::changedText);
+    connect(ui->calendarWidget, &QCalendarWidget::clicked, this, &MainWindow::changedTextForDate);
+    connect(ui->calendarWidget, &QCalendarWidget::selectionChanged, this, &MainWindow::changedText);
+    connect(ui->calendarWidget, &QCalendarWidget::currentPageChanged, this, &MainWindow::changedText);
+    connect(ui->calendarWidget, &QCalendarWidget::activated, this, &MainWindow::changedText);
 
-    connect(ui->curDateBtn,&QPushButton::clicked,[=](){
+    connect(ui->curDateBtn, &QPushButton::clicked, [ = ]() {
         ui->calendarWidget->setSelectedDate(QDate::currentDate());
     });
 
-    connect(ui->pushButton,&QPushButton::clicked,[=](){
-        ui->tableWidget->setRowCount(ui->tableWidget->rowCount()+1);
+    connect(ui->pushButton, &QPushButton::clicked, [ = ]() {
+        int row = ui->tableWidget->rowCount() + 1;
+        ui->tableWidget->setRowCount(row);
         QTableWidgetItem *item = new QTableWidgetItem;
         item->setText(QTime::currentTime().toString());
-        ui->tableWidget->setVerticalHeaderItem(ui->tableWidget->rowCount()-1,item);
+        ui->tableWidget->setVerticalHeaderItem(row - 1, item);
+        for (int i = 0; i < virtueList.size(); ++i) {
+            QTableWidgetItem *it = new QTableWidgetItem;
+            ui->tableWidget->setItem(row - 1, i, it);
+        }
+
     });
+
+    connect(ui->pushButton_2, &QPushButton::clicked, [ = ]() {
+        auto it = ui->tableWidget->currentItem();
+        if (it) {
+            ui->tableWidget->removeRow(it->row());
+        }
+    });
+
 
     ui->statusBar->addWidget(&statusLable);
 
-    connect(ui->tableWidget,&QTableWidget::clicked,[=](const QModelIndex &index){
+    connect(ui->tableWidget, &QTableWidget::clicked, [ = ](const QModelIndex & index) {
         statusLable.setText(virtueList[index.column()]);
     });
 
+    connect(ui->tableWidget, &QTableWidget::currentItemChanged, [ = ](const QTableWidgetItem * item) {
+        statusLable.setText(virtueList[item->column()]);
+    });
+
+
+    connect(ui->pushButton_3, &QPushButton::clicked, [ & ]() {
+        this->now -= QDate::currentDate().weekNumber();
+        changedTextForDate(QDate::currentDate());
+    });
+
+
+    initDataBase();
 }
 
 MainWindow::~MainWindow()
@@ -85,10 +113,21 @@ void MainWindow::changedText()
 
 void MainWindow::changedTextForDate(const QDate &date)
 {
-    int i = date.weekNumber()%virtueList.size();
+    int i = (date.weekNumber() + now) % virtueList.size();
+    if(i<0){
+        i = virtueList.size() - i;
+        i=i%virtueList.size();
+        i = virtueList.size()-i;
+
+    }
     ui->textEdit->setText(this->virtueList[i]);
     ui->textEdit->append("\n");
     ui->textEdit->append(My_MIND);
+}
+
+bool MainWindow::initDataBase()
+{
+
 }
 
 

@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QLabel>
+#include <QSqlDatabase>
 
 namespace Ui {
 class MainWindow;
@@ -18,10 +19,13 @@ public:
 private:
     void changedText();
     void changedTextForDate(const QDate&date);
+    bool initDataBase();
 private:
     Ui::MainWindow *ui;
     QVector<QString>virtueList;
     QLabel statusLable;
+    QSqlDatabase sqliteDatabase;
+    int now = 0;
 };
 
 #endif // MAINWINDOW_H
